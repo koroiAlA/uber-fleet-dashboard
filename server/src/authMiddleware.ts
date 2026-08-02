@@ -16,7 +16,7 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   const token = authHeader.split(' ')[1]; // "Bearer eyJhbGci..." -> tomamos solo el token
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number; role: string };
+   const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as unknown as { userId: number; role: string };
     req.user = decoded; // guardamos los datos del usuario para usarlos en el endpoint
     next(); // todo bien, deja pasar la petición
   } catch (error) {
