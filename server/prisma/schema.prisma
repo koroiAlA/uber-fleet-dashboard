@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Taxi {
+  id           Int           @id
+  plate        String        @unique
+  trajectories Trajectory[]
+
+  @@map("taxis")
+}
+
+model Trajectory {
+  id          Int      @id @default(autoincrement())
+  taxiId      Int      @map("taxi_id")
+  latitude    Float
+  longitude   Float
+  recordedAt  DateTime @map("date")
+  taxi        Taxi     @relation(fields: [taxiId], references: [id])
+
+  @@index([taxiId])
+  @@map("trajectories")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("user")
+
+  @@map("users")
+}
