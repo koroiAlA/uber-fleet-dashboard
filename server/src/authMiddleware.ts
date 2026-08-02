@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-// Extendemos el tipo Request para poder guardar los datos del usuario ahí
 interface AuthRequest extends Request {
   user?: { userId: number; role: string };
 }
@@ -13,12 +12,16 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
     return res.status(401).json({ error: 'Token no proporcionado' });
   }
 
-  const token = authHeader.split(' ')[1]; // "Bearer eyJhbGci..." -> tomamos solo el token
+  const token = authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token no proporcionado' });
+  }
 
   try {
-   const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as unknown as { userId: number; role: string };
-    req.user = decoded; // guardamos los datos del usuario para usarlos en el endpoint
-    next(); // todo bien, deja pasar la petición
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as unknown as { userId: number; role: string };
+    req.user = decoded;
+    next();
   } catch (error) {
     return res.status(401).json({ error: 'Token inválido o expirado' });
   }
