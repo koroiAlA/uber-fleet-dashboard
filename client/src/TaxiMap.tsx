@@ -1,12 +1,19 @@
-import { useState,useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import { useQuery } from '@tanstack/react-query';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import api from './api';
+import { useState, useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+  useMap,
+} from "react-leaflet";
+import { useQuery } from "@tanstack/react-query";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import api from "./api";
 
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
 const defaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -39,16 +46,16 @@ function TaxiMap() {
 
   // Últimas ubicaciones (para los pines)
   const { data: taxis, isLoading, error } = useQuery<TaxiLocation[]>({
-    queryKey: ['taxis-latest'],
+    queryKey: ["taxis-latest"],
     queryFn: async () => {
-      const response = await api.get('/trajectories/latest');
+      const response = await api.get("/trajectories/latest");
       return response.data;
     },
   });
 
   // Recorrido completo del taxi seleccionado
   const { data: route } = useQuery<TaxiLocation[]>({
-    queryKey: ['trajectory', selectedTaxiId],
+    queryKey: ["trajectory", selectedTaxiId],
     queryFn: async () => {
       const response = await api.get(`/trajectories/${selectedTaxiId}`);
       return response.data;
@@ -61,36 +68,66 @@ function TaxiMap() {
 
   const center: [number, number] = [39.9, 116.4];
   const routePositions: [number, number][] =
-  route?.map((point) => [point.longitude, point.latitude]) ?? [];
+    route?.map((point) => [point.longitude, point.latitude]) ?? [];
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
+    <div className="dashboard-layout">
       {/* Barra lateral */}
-      <div style={{ width: '260px', padding: '1rem', overflowY: 'auto', background: '#111', color: '#eee' }}>
-        <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>🚕 Flota ({taxis?.length})</h2>
+      <div
+        className="sidebar"
+        style={{
+          padding: "1.2rem",
+          overflowY: "auto",
+          background: "linear-gradient(180deg, #0f0f14, #1a1a24)",
+          color: "#eee",
+          borderRight: "1px solid #2a2a35",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "1.4rem",
+            fontWeight: 700,
+            marginBottom: "1.5rem",
+            background: "linear-gradient(90deg, #60a5fa, #a78bfa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            letterSpacing: "-0.5px",
+            textAlign: "center",
+          }}
+        >
+          🚕 Flota ({taxis?.length})
+        </h2>
         {taxis?.map((taxi) => (
           <div
             key={taxi.taxiId}
             onClick={() => setSelectedTaxiId(taxi.taxiId)}
+            className={`taxi-item ${
+              selectedTaxiId === taxi.taxiId ? "selected" : ""
+            }`}
             style={{
-              padding: '0.6rem',
-              marginBottom: '0.4rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              background: selectedTaxiId === taxi.taxiId ? '#2563eb' : '#1f1f1f',
+              padding: "0.7rem 0.9rem",
+              marginBottom: "0.5rem",
+              borderRadius: "8px",
+              background:
+                selectedTaxiId === taxi.taxiId ? undefined : "#1a1a24",
+              fontWeight: selectedTaxiId === taxi.taxiId ? 600 : 400,
             }}
           >
-            Taxi #{taxi.taxiId}
+            🚖 Taxi #{taxi.taxiId}
           </div>
         ))}
       </div>
 
       {/* Mapa */}
-      <div style={{ flex: 1 }}>
-        <MapContainer center={center} zoom={11} style={{ height: '100%', width: '100%' }}>
+      <div className="map-container">
+        <MapContainer
+          center={center}
+          zoom={11}
+          style={{ height: "100%", width: "100%" }}
+        >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; OpenStreetMap contributors'
+            attribution="&copy; OpenStreetMap contributors"
           />
           {taxis?.map((taxi) => (
             <Marker
@@ -99,8 +136,10 @@ function TaxiMap() {
               eventHandlers={{ click: () => setSelectedTaxiId(taxi.taxiId) }}
             >
               <Popup>
-                Taxi #{taxi.taxiId}<br />
-                Última actualización: {new Date(taxi.recordedAt).toLocaleString()}
+                Taxi #{taxi.taxiId}
+                <br />
+                Última actualización:{" "}
+                {new Date(taxi.recordedAt).toLocaleString()}
               </Popup>
             </Marker>
           ))}
